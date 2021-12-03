@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+  nginx:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile-front
+    ports:
+      - "80:80"
+    networks:
+      - frontend
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+
+  backend:
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: Dockerfile-back
+    networks:
+      - frontend
+      - backend
+    expose:
+      - "8000"
+    depends_on:
+      - database
+
+  database:
+    restart: unless-stopped
+    image: postgres:alpine
+    env_file: .env  
+    networks:
+      - backend
+    expose:
+      - "5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  pgdata:
